@@ -31,19 +31,6 @@ def count_items(items):
     return counts
 
 
-def format_item(name, internal_id):
-    """
-    Format the item name with a markdown link to its anchor.
-    If name is None, use the internal_id as the display name without a link.
-    """
-    if name:
-        # Sanitize the internal_id to create a valid anchor
-        anchor = sanitize_anchor(internal_id)
-        return f"[{name}](#{anchor})"
-    else:
-        return internal_id
-
-
 def sanitize_anchor(text):
     """
     Sanitize the internal_id to create a valid markdown anchor.
@@ -56,22 +43,28 @@ def sanitize_anchor(text):
     return text
 
 
-def format_items(items, props_dict):
+def format_items_markdown_list(items, props_dict):
     """
-    Format a list of items with their names and links.
-    If multiple of the same item are present, append 'xN' where N is the count.
-    If an item's name is not found in props_dict, use the internal_id.
-    Returns a comma-separated string of formatted items.
+    Format a list of items as a Markdown unordered list.
+    Each item is formatted as:
+    - ItemName xN ([internal_id](props.md#anchor))
+    If N is 1, omit the xN.
+    If the item name is missing, use internal_id as the name.
     """
     counts = count_items(items)
     formatted = []
     for internal_id, count in counts.items():
-        name = props_dict.get(internal_id, {}).get("Name")
-        formatted_name = format_item(name, internal_id)
+        prop = props_dict.get(internal_id, {})
+        name = prop.get("Name", internal_id)
+        anchor = sanitize_anchor(internal_id)
+        if name == "N/A":
+            name = internal_id
         if count > 1:
-            formatted_name += f" x{count}"
-        formatted.append(formatted_name)
-    return ", ".join(formatted)
+            item_str = f"- {name} x{count} ([{internal_id}](props.md#{anchor}))"
+        else:
+            item_str = f"- {name} ([{internal_id}](props.md#{anchor}))"
+        formatted.append(item_str)
+    return "\n".join(formatted)
 
 
 def escape_markdown(text):
@@ -101,7 +94,9 @@ def main():
 
     for internal_id, details in props_rows.items():
         name_entry = extract_field(details, "displayName")
-        name = name_entry.get("SourceString") if name_entry else "N/A"
+        name = (
+            name_entry.get("SourceString") if name_entry else internal_id
+        )  # Use internal_id if name missing
 
         price = details.get(
             next((k for k in details if k.startswith("price_")), "price"), "N/A"
@@ -114,31 +109,32 @@ def main():
 
         props_list.append(
             {
-                "Name": name if name else internal_id,
+                "Name": name,
                 "Internal Id": internal_id,
                 "Price": price,
                 "Description": description,
             }
         )
 
-        props_dict[internal_id] = {"Name": name}
+        props_dict[internal_id] = {"Name": name if name != "N/A" else internal_id}
 
-    # Sort props_list by Name
-    props_list.sort(key=lambda x: x["Name"].lower())
+    # Sort props_list by Name if available, else by Internal Id
+    props_list.sort(
+        key=lambda x: x["Name"].lower() if x["Name"] else x["Internal Id"].lower()
+    )
 
     # Write props.md
     with open(props_md, "w", encoding="utf-8") as f:
-        f.write("| Name | Internal Id | Price | Description |\n")
+        f.write("# Props\n\n")
+        f.write("| Internal Id | Name | Price | Description |\n")
         f.write("| --- | --- | --- | --- |\n")
         for prop in props_list:
             anchor = sanitize_anchor(prop["Internal Id"])
-            name_link = (
-                f"<a id=\"{anchor}\"></a> [{escape_markdown(prop['Name'])}](#{anchor})"
-            )
-            internal_id = escape_markdown(prop["Internal Id"])
+            internal_id_link = f"<a id=\"{anchor}\"></a> [{escape_markdown(prop['Internal Id'])}](#{anchor})"
+            name = escape_markdown(prop["Name"])
             price = escape_markdown(str(prop["Price"]))
             description = escape_markdown(prop["Description"])
-            f.write(f"| {name_link} | {internal_id} | {price} | {description} |\n")
+            f.write(f"| {internal_id_link} | {name} | {price} | {description} |\n")
 
     print(f"Generated {props_md}")
 
@@ -159,6 +155,7 @@ def main():
         blueprint = details.get(
             next((k for k in details if k.startswith("blueprint_")), "blueprint"), ""
         )
+        blueprint = blueprint if blueprint else "N/A"
 
         # Extract reverse
         reverse = details.get(
@@ -166,24 +163,30 @@ def main():
         )
         reverse_icon = "✅" if reverse else "❌"
 
-        # Format results and ingredients
-        formatted_results = format_items(results, props_dict)
-        formatted_ingredients = format_items(ingredients, props_dict)
+        # Format results and ingredients as Markdown lists
+        formatted_results = format_items_markdown_list(results, props_dict)
+        formatted_ingredients = format_items_markdown_list(ingredients, props_dict)
 
         craft_list.append(
             {
                 "Result": formatted_results,
                 "Recipe": formatted_ingredients,
-                "Blueprint": blueprint if blueprint else "N/A",
+                "Blueprint": blueprint,
                 "Reversible": reverse_icon,
             }
         )
 
-    # Sort craft_list by Result
-    craft_list.sort(key=lambda x: x["Result"].lower())
+    # Sort craft_list by Result (using first item name for sorting)
+    def sort_key(craft):
+        first_line = craft["Result"].split("\n")[0]
+        match = re.match(r"-\s+(.*?)\s+\(", first_line)
+        return match.group(1).lower() if match else ""
+
+    craft_list.sort(key=sort_key)
 
     # Write craft_recipes.md
     with open(craft_recipes_md, "w", encoding="utf-8") as f:
+        f.write("# Craft Recipes\n\n")
         f.write("| Result | Recipe | Blueprint | Reversible |\n")
         f.write("| --- | --- | --- | --- |\n")
         for craft in craft_list:
@@ -191,7 +194,10 @@ def main():
             recipe = escape_markdown(craft["Recipe"])
             blueprint = escape_markdown(craft["Blueprint"])
             reversible = craft["Reversible"]
-            f.write(f"| {result} | {recipe} | {blueprint} | {reversible} |\n")
+            # For multi-line cells, use <br> or ensure proper Markdown rendering
+            result_md = result.replace("\n", "<br>")
+            recipe_md = recipe.replace("\n", "<br>")
+            f.write(f"| {result_md} | {recipe_md} | {blueprint} | {reversible} |\n")
 
     print(f"Generated {craft_recipes_md}")
 
