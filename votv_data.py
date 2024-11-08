@@ -60,11 +60,11 @@ def format_items_markdown_list(items, props_dict):
         if name == "N/A":
             name = internal_id
         if count > 1:
-            item_str = f"- {name} x{count} ([{internal_id}](props.md#{anchor}))"
+            item_str = f"{name} x{count} ([{internal_id}](props.md#{anchor}))"
         else:
-            item_str = f"- {name} ([{internal_id}](props.md#{anchor}))"
+            item_str = f"{name} ([{internal_id}](props.md#{anchor}))"
         formatted.append(item_str)
-    return "\n".join(formatted)
+    return "</br>".join(formatted)
 
 
 def escape_markdown(text):
@@ -194,10 +194,7 @@ def main():
             recipe = escape_markdown(craft["Recipe"])
             blueprint = escape_markdown(craft["Blueprint"])
             reversible = craft["Reversible"]
-            # For multi-line cells, use <br> or ensure proper Markdown rendering
-            result_md = result.replace("\n", "<br>")
-            recipe_md = recipe.replace("\n", "<br>")
-            f.write(f"| {result_md} | {recipe_md} | {blueprint} | {reversible} |\n")
+            f.write(f"| {result} | {recipe} | {blueprint} | {reversible} |\n")
 
     print(f"Generated {craft_recipes_md}")
 
