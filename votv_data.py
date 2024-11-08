@@ -229,7 +229,6 @@ def main():
                     if prop:
                         name = escape_markdown(prop["Name"])
                         anchor_prop = sanitize_anchor(prop["Internal Id"])
-                        name_link = f"{name} ([{internal_id}](props.md#{anchor_prop}))"
                         internal_id_escaped = escape_markdown(prop["Internal Id"])
                         internal_id_link = (
                             f"[{internal_id_escaped}](props.md#{anchor_prop})"
@@ -237,7 +236,7 @@ def main():
                         price = escape_markdown(str(prop["Price"]))
                         description = escape_markdown(prop["Description"])
                         f.write(
-                            f"| {name_link} | {internal_id_link} | {price} | {description} |\n"
+                            f"| {name} | {internal_id_link} | {price} | {description} |\n"
                         )
                 f.write("\n")
 
