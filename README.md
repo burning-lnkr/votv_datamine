@@ -1,20 +1,18 @@
 # Voices of the Void - Data Mining
 
-This repository serves as a collection of extracted game data, presented in an easily readable format. Please be aware that this content is a result of data mining and includes detailed insights into game mechanics, including **work-in-progress (WIP)**, **debug**, and **otherwise unavailable content** that may contain significant **spoilers** for the game.
+This repository serves as a collection of extracted game data, presented in an easily readable format. Please be aware that this content is a result of data mining and includes detailed insights into game mechanics, including **work-in-progress (WIP)**, **debug**, and **otherwise unavailable content** that contains significant **spoilers** for the game.
+
+Do **NOT** share or refer to this repo or any of it's contents on EternityDev's discord, itch.io or any other platforms. This will get you banned, and rightfully so.
 
 ---
 
-## **Game Version**
-
-This repository reflects data from version **0.8.1** of "Voices of the Void". Please ensure that you are aware of potential discrepancies if you are viewing this in the context of a different game version.
-
----
+## Game Version: **0.8.1b**
 
 ## Contents
 
-- **[Props Data](props.md)**: A comprehensive inventory of all props available in the game, with detailed stats and information.
+- **[Props List](props.md)**
 
-- **[Crafting Recipes](craft_recipes.md)**: A compilation of in-game crafting recipes, highlighting inputs, outputs, and crafting specifics.
+- **[Crafting Recipes](craft_recipes.md)**
 
 ---
 
