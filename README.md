@@ -14,7 +14,7 @@ Do **NOT** share or refer to this repo or any of it's contents on EternityDev's 
 
 - **[Crafting Recipes](craft_recipes.md)**
 
-- **[Prop Tags List](props_by_tags.md)**: Subset of items grouped by tags, useful for some crafting recipes
+- **[Prop Tags List](props_by_tags.md)** - Subset of items grouped by tags, useful for some crafting recipes
 
 ---
 
